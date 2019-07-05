@@ -1,0 +1,41 @@
+#!/bin/bash
+# A utility for easy configuration and connectivity with ssh tunnels using a menu.
+# Configure the list of servers in a .env file. Pay attention to the needed values, delimited by pipe:
+#
+# name|url|localPort|destinyPort
+#
+# Usage: tunnel my-env-file.env
+# Author: mmonge
+
+if [ -z $1 ]; then
+    echo "You must provide a file with the configured serverList to use"
+else
+    # read array of serverList from given env file
+    readarray serverList < $1
+
+    index=1
+    for server in "${serverList[@]}"; do 
+        echo "$index) $server" | cut -d'|' -f1
+        ((index++))
+    done
+    ((index--))
+
+
+    echo
+    printf 'Select an entry from the above list: '
+    read -r opt
+
+    if [[ `seq 1 $index` =~ $opt ]]; then
+        selected=${serverList[$opt-1]}
+
+        url=`cut -d'|' -f2 <<< $selected`
+        localPort=`cut -d'|' -f3 <<< $selected`
+        destinyPort=`cut -d'|' -f4 <<< $selected`
+
+        ssh-tunnel $url $localPort $destinyPort
+    else
+        printf "Invalid option\n"
+    fi
+ 
+fi
+
